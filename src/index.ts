@@ -1,1 +1,3 @@
-console.log('realmd');
+export function realmd() {
+  console.log('realmd');
+}

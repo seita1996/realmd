@@ -3,8 +3,8 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
+  title: 'RealMD',
+  tagline: 'React Markdown Realtime Previewer',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -58,9 +58,9 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     navbar: {
-      title: 'My Site',
+      title: 'RealMD',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'RealMD Logo',
         src: 'img/logo.svg',
       },
       items: [
@@ -71,6 +71,7 @@ const config: Config = {
           label: 'Tutorial',
         },
         {to: '/blog', label: 'Blog', position: 'left'},
+        {to: '/demo', label: 'Demo', position: 'left'},
         {
           href: 'https://github.com/facebook/docusaurus',
           label: 'GitHub',
