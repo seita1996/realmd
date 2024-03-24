@@ -12,7 +12,7 @@
   "keywords": [],
   "author": "seitaro",
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "@codemirror/lang-markdown": "^6.2.4",
     "@codemirror/language": "^6.10.0",
     "@codemirror/language-data": "^6.4.0",

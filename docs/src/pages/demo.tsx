@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from '@theme/Layout';
-import { Editor, Sample } from '../../../src/index';
+import { Editor } from 'realmd';
 
 export default function Demo() {
   const sample = `
@@ -34,8 +34,7 @@ const hoge = 100;
     <Layout>
       <h1>Demo</h1>
       <p>This is a Demo page</p>
-      {/* <Editor text={sample} /> */}
-      <Sample />
+      <Editor text={sample} />
     </Layout>
   );
 }
