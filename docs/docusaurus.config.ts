@@ -81,7 +81,23 @@ const config: Config = {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
     },
-  } satisfies Preset.ThemeConfig
+  } satisfies Preset.ThemeConfig,
+  plugins: [
+    () => ({
+      // Multiple React reads cause errors, so specify where to read
+      // https://github.com/facebook/docusaurus/issues/8091#issuecomment-1269112001
+      name: 'resolve-react',
+      configureWebpack() {
+        return {
+          resolve: {
+            alias: {
+              react: path.resolve('../node_modules/react'), 
+            },
+          },
+        };
+      },
+    }),
+  ]
 };
 
 export default config;
