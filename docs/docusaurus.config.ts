@@ -16,8 +16,8 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'seita1996', // Usually your GitHub org/user name.
+  projectName: 'realmd', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -81,23 +81,7 @@ const config: Config = {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
     },
-  } satisfies Preset.ThemeConfig,
-  plugins: [
-    () => ({
-      // Multiple React reads cause errors, so specify where to read
-      // https://github.com/facebook/docusaurus/issues/8091#issuecomment-1269112001
-      name: 'resolve-react',
-      configureWebpack() {
-        return {
-          resolve: {
-            alias: {
-              react: path.resolve('../node_modules/react'), 
-            },
-          },
-        };
-      },
-    }),
-  ]
+  } satisfies Preset.ThemeConfig
 };
 
 export default config;
