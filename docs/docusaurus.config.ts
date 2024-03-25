@@ -5,7 +5,7 @@ import path from 'node:path';
 
 const config: Config = {
   title: '[WIP] RealMD',
-  tagline: 'React Markdown Realtime Previewer',
+  tagline: 'Realtime Preview Markdown Editor',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here

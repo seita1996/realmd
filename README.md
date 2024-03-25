@@ -1,3 +1,3 @@
 # RealMD
 
-React Markdown Realtime Previewer
+Realtime Preview Markdown Editor
