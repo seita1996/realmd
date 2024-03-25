@@ -27,8 +27,8 @@ dependencies:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
   realmd:
-    specifier: link:../
-    version: link:..
+    specifier: link:../packages/realmd
+    version: link:../packages/realmd
 
 devDependencies:
   '@docusaurus/module-type-aliases':
