@@ -25,7 +25,7 @@
     "realmd": "workspace:*"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.1.1",
+    "@docusaurus/module-type-aliases": "3.2.1",
     "@docusaurus/tsconfig": "3.2.0",
     "@docusaurus/types": "3.1.1"
   },
