@@ -3520,14 +3520,14 @@ packages:
     resolution: {integrity: sha512-WmSAg7WgqW7m4x8Mt4N6ZyKz0BubSj/2tVUMsAHp+Yd2AMwcSbeFq9WympT19p5heCFmF97R9eD5uUR/t4HEqw==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.3.1
+      '@types/react': 18.3.2
       '@types/react-router': 5.1.20
 
   /@types/react-router-dom@5.3.3:
     resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.3.1
+      '@types/react': 18.3.2
       '@types/react-router': 5.1.20
 
   /@types/react-router@5.1.20:
