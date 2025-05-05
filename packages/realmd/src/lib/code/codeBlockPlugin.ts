@@ -1,6 +1,13 @@
 import { HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
-import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import {
+  EditorView,
+  Decoration,
+  DecorationSet,
+  ViewPlugin,
+  ViewUpdate,
+  WidgetType, // Import WidgetType
+} from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import { Range } from "@codemirror/state";
 
@@ -33,7 +40,7 @@ export const codeBlockTheme = EditorView.baseTheme({
     margin: "8px 0",
     overflowX: "auto",
     fontSize: "0.9em",
-    lineHeight: "1.5"
+    lineHeight: "1.5",
   },
   ".cm-code-lang": {
     color: "#888",
@@ -42,76 +49,119 @@ export const codeBlockTheme = EditorView.baseTheme({
     display: "block",
     borderBottom: "1px solid #444",
     marginBottom: "8px",
-    paddingBottom: "4px"
-  }
+    paddingBottom: "4px",
+  },
 });
 
-// Plugin to hide triple backticks and transform code block display
-export const codeBlockPlugin = ViewPlugin.fromClass(class {
-  decorations: DecorationSet;
-
-  constructor(view: EditorView) {
-    this.decorations = this.createDecorations(view);
+// Widget to display the language name
+class LanguageWidget extends WidgetType {
+  constructor(readonly lang: string) {
+    super();
   }
 
-  update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged) {
-      this.decorations = this.createDecorations(update.view);
+  eq(other: LanguageWidget) {
+    return other.lang === this.lang;
+  }
+
+  toDOM() {
+    const langDiv = document.createElement("div");
+    langDiv.className = "cm-code-lang";
+    langDiv.textContent = this.lang;
+    return langDiv;
+  }
+
+  ignoreEvent() {
+    return true;
+  }
+}
+
+// Plugin to hide triple backticks and apply styling to code blocks
+export const codeBlockPlugin = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+
+    constructor(view: EditorView) {
+      this.decorations = this.createDecorations(view);
     }
-  }
 
-  createDecorations(view: EditorView) {
-    const decorations: Range<Decoration>[] = [];
-    const { state } = view;
-
-    syntaxTree(state).iterate({
-      enter: (node) => {
-        const type = node.type;
-        if (type.name === "FencedCode") {
-          const codeBlockText = state.doc.sliceString(node.from, node.to);
-          // Ensure we match the fenced code correctly
-          const match = codeBlockText.match(/^```(\w*)\n([\s\S]*?)```$/m);
-          
-          if (match) {
-            const [whole, lang, code] = match;
-            
-            // Replace with content that preserves the original code but hides backticks
-            const codeLines = code.trim().split('\n');
-            const codeContent = document.createElement('div');
-            codeContent.className = 'cm-code-block';
-            
-            if (lang) {
-              const langDiv = document.createElement('div');
-              langDiv.className = 'cm-code-lang';
-              langDiv.textContent = lang;
-              codeContent.appendChild(langDiv);
-            }
-
-            const codeDiv = document.createElement('div');
-            codeDiv.textContent = code;
-            codeContent.appendChild(codeDiv);
-            
-            // Use a simpler decoration approach 
-            decorations.push(Decoration.mark({
-              class: "cm-code-block" 
-            }).range(node.from, node.to));
-            
-            // Instead of trying to completely replace with styling, just hide the backticks
-            const openBackticks = state.doc.sliceString(node.from, node.from + 3 + (lang ? lang.length : 0));
-            const closeBackticksPos = node.to - 3;
-            
-            // Hide opening backticks
-            decorations.push(Decoration.replace({}).range(node.from, node.from + 3 + (lang ? lang.length : 0)));
-            
-            // Hide closing backticks
-            decorations.push(Decoration.replace({}).range(closeBackticksPos, node.to));
-          }
-        }
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged) {
+        this.decorations = this.createDecorations(update.view);
       }
-    });
+    }
 
-    return Decoration.set(decorations);
-  }
-}, {
-  decorations: v => v.decorations
-});
+    createDecorations(view: EditorView) {
+      const decorations: Range<Decoration>[] = [];
+      const { state } = view;
+
+      syntaxTree(state).iterate({
+        enter: (node) => {
+          const type = node.type;
+          if (type.name === "FencedCode") {
+            let lang = null;
+            let codeStart = -1;
+            let codeEnd = -1;
+
+            // Iterate through child nodes to find language, code text, and backticks
+            syntaxTree(state).iterate({
+              from: node.from,
+              to: node.to,
+              enter: (childNode) => {
+                if (childNode.type.name === "CodeInfo") {
+                  lang = state.doc.sliceString(childNode.from, childNode.to);
+                  // Hide the CodeInfo text (language name after backticks)
+                  decorations.push(
+                    Decoration.replace({}).range(childNode.from, childNode.to),
+                  );
+                } else if (childNode.type.name === "CodeText") {
+                  codeStart = childNode.from;
+                  codeEnd = childNode.to;
+                  // Apply code block styling to the code text lines
+                  for (
+                    let i = state.doc.lineAt(codeStart).number;
+                    i <= state.doc.lineAt(codeEnd).number;
+                    i++
+                  ) {
+                    const line = state.doc.line(i);
+                    decorations.push(
+                      Decoration.line({
+                        class: "cm-code-block",
+                      }).range(line.from),
+                    );
+                  }
+                } else if (childNode.type.name === "CodeMark") {
+                  // Hide the backticks
+                  decorations.push(
+                    Decoration.replace({}).range(childNode.from, childNode.to),
+                  );
+                }
+              },
+            });
+
+            // Insert language widget after the opening backticks if language exists
+            if (lang && node.node.firstChild?.type.name === "CodeMark") {
+              // Access firstChild via node.node
+              decorations.push(
+                Decoration.widget({
+                  widget: new LanguageWidget(lang),
+                  side: 1, // Place after the opening backticks
+                }).range(node.node.firstChild.to), // Access firstChild via node.node
+              );
+            }
+          }
+        },
+      });
+
+      // Sort decorations by from position and startSide
+      decorations.sort((a, b) => {
+        if (a.from !== b.from) return a.from - b.from;
+        return a.value.startSide - b.value.startSide;
+      });
+
+      return Decoration.set(decorations);
+    }
+  },
+  {
+    decorations: (v) => v.decorations,
+  },
+);

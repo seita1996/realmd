@@ -1,42 +1,54 @@
 import { syntaxTree } from "@codemirror/language";
 import { Range } from "@codemirror/state";
-import {
-  Decoration,
-  EditorView,
-} from "@codemirror/view";
-import { ImageWidget } from './imageWidget'
+import { Decoration, EditorView } from "@codemirror/view";
+import { ImageWidget } from "./imageWidget"; // Assuming ImageWidgetParams is defined here
 
-const imageRegex = /!\[.*\]\((?<url>.*)\)/;
+const imageRegex = /!\[(?<alt>.*)\]\((?<url>.*)\)/; // Capture alt text
 
-interface ImageWidgetParams {
+// imageDecoration now expects url and alt
+const imageDecoration = ({
+  url,
+  alt,
+  view,
+}: {
   url: string;
+  alt: string;
   view: EditorView;
-}
-
-const imageDecoration = (imageWidgetParams: ImageWidgetParams) =>
+}) =>
   Decoration.widget({
-    widget: new ImageWidget(imageWidgetParams),
-    side: -1
+    widget: new ImageWidget({ url, alt, view }), // Pass alt to ImageWidget
+    side: -1,
   });
 
 export function images(view: EditorView) {
   const widgets: Range<Decoration>[] = [];
 
   for (const { from, to } of view.visibleRanges) {
-
     syntaxTree(view.state).iterate({
-      from, to,
+      from,
+      to,
       enter: (node) => {
         if (node.name === "Image") {
           const result = imageRegex.exec(
-            view.state.doc.sliceString(node.from, node.to)
+            view.state.doc.sliceString(node.from, node.to),
           );
 
-          if (result && result.groups && result.groups.url) {
+          if (
+            result &&
+            result.groups &&
+            result.groups.url &&
+            result.groups.alt !== undefined
+          ) {
+            // Check for alt group
             widgets.push(
-              imageDecoration({ url: result.groups.url, view }).range(
-                node.to
-              )
+              imageDecoration({
+                url: result.groups.url,
+                alt: result.groups.alt,
+                view,
+              }).range(
+                // Pass alt
+                node.to,
+              ),
             );
           }
         }

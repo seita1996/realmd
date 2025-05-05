@@ -5,13 +5,15 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "typecheck": "turbo typecheck",
     "lint": "eslint",
     "lint-fix": "eslint --cache --fix src/ && prettier --write src/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "turbo test"
   },
   "author": "seitaro",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^8.1.0",
     "eslint": "^8.57.0",
@@ -26,7 +28,8 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "prettier": "3.5.3",
     "turbo": "^2.0.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^3.1.2"
   },
   "packageManager": "pnpm@10.4.1"
 }
