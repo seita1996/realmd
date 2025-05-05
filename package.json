@@ -5,9 +5,10 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "typecheck": "turbo typecheck",
     "lint": "eslint",
     "lint-fix": "eslint --cache --fix src/ && prettier --write src/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "turbo test"
   },
   "author": "seitaro",
   "license": "MIT",
