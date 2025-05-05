@@ -29,21 +29,13 @@ export class ImageWidget extends WidgetType {
     image.className = "cm-image-img";
     image.src = this.url;
 
-    container.style.backgroundColor =
-      "var(--hybrid-mde-images-bg-color, rgba(0, 0, 0, 0.3))";
-    container.style.display = "flex";
-    container.style.alignItems = "center";
-    container.style.justifyContent = "center";
-    container.style.padding = "1rem";
-    container.style.marginBottom = "0.5rem";
-    container.style.marginTop = "0.5rem";
-    container.style.maxWidth = "100%";
-
-    figure.style.margin = "0";
-
-    image.style.display = "block";
-    image.style.maxHeight = "var(--hybrid-mde-images-max-height, 20rem)";
-    image.style.maxWidth = "100%";
+    image.onerror = () => {
+      // Handle image loading errors
+      const errorElement = document.createElement("span");
+      errorElement.textContent = `Error loading image: ${this.url}`;
+      errorElement.style.color = "red"; // Simple styling for error message
+      container.replaceChild(errorElement, figure); // Replace figure with error message
+    };
 
     figure.appendChild(image);
 
