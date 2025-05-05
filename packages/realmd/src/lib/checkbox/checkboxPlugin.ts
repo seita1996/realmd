@@ -48,11 +48,23 @@ export const checkboxPlugin = ViewPlugin.fromClass(
 );
 
 function toggleBoolean(view: EditorView, pos: number) {
-  const before = view.state.doc.sliceString(Math.max(0, pos - 3), pos);
+  // Look at the pattern "[ ]" or "[x]" around the given position (state character)
+  const patternRangeStart = Math.max(0, pos - 1); // Position of '['
+  const patternRangeEnd = pos + 2; // Position after ']'
+  const pattern = view.state.doc.sliceString(
+    patternRangeStart,
+    patternRangeEnd,
+  );
+
   let change;
-  if (before == "[ ]") change = { from: pos - 3, to: pos, insert: "[x]" };
-  else if (before == "[x]") change = { from: pos - 3, to: pos, insert: "[ ]" };
-  else return false;
+  if (pattern === "[ ]") {
+    change = { from: patternRangeStart, to: patternRangeEnd, insert: "[x]" };
+  } else if (pattern === "[x]") {
+    change = { from: patternRangeStart, to: patternRangeEnd, insert: "[ ]" };
+  } else {
+    return false;
+  }
+
   view.dispatch({ changes: change });
   return true;
 }

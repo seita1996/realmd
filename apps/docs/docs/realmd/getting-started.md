@@ -42,3 +42,11 @@ The `Editor` component accepts a `text` prop for the initial content. You can ma
 
 - Learn about the available [Plugins](#plugins).
 - Explore [Customization](#customization) options.
+
+## Plugins
+
+(TODO: Add details about available plugins)
+
+## Customization
+
+(TODO: Add details about customization options)

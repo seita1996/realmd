@@ -1,12 +1,19 @@
 import { HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
-import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import {
+  EditorView,
+  Decoration,
+  DecorationSet,
+  ViewPlugin,
+  ViewUpdate,
+  WidgetType, // Import WidgetType
+} from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import { Range } from "@codemirror/state";
 
 // Style for tables in markdown
 export const tableStyle = HighlightStyle.define([
-  { tag: tags.heading, fontWeight: "bold" } // This will affect table headers too
+  { tag: tags.heading, fontWeight: "bold" }, // This will affect table headers too
 ]);
 
 // Theme for table styling
@@ -16,7 +23,7 @@ export const tableTheme = EditorView.baseTheme({
     width: "100%",
     overflowX: "auto",
     margin: "1em 0",
-    borderCollapse: "collapse"
+    borderCollapse: "collapse",
   },
   ".cm-table": {
     borderCollapse: "collapse",
@@ -24,23 +31,23 @@ export const tableTheme = EditorView.baseTheme({
     border: "1px solid #555",
     fontSize: "0.95em",
     fontFamily: "inherit",
-    margin: "0"
+    margin: "0",
   },
   ".cm-table-row": {
     borderBottom: "1px solid #555",
-    display: "table-row"
+    display: "table-row",
   },
   ".cm-table-cell": {
     padding: "8px 12px",
     borderRight: "1px solid #555",
     display: "table-cell",
-    textAlign: "left"
+    textAlign: "left",
   },
   ".cm-table-cell-center": {
-    textAlign: "center"
+    textAlign: "center",
   },
   ".cm-table-cell-right": {
-    textAlign: "right"
+    textAlign: "right",
   },
   ".cm-table-header": {
     fontWeight: "bold",
@@ -48,185 +55,141 @@ export const tableTheme = EditorView.baseTheme({
     backgroundColor: "rgba(0, 0, 0, 0.1)",
     display: "table-cell",
     padding: "8px 12px",
-    textAlign: "left"
+    textAlign: "left",
   },
   ".cm-table-header-center": {
-    textAlign: "center"
+    textAlign: "center",
   },
   ".cm-table-header-right": {
-    textAlign: "right"
-  }
+    textAlign: "right",
+  },
 });
 
-// Improved table plugin to handle tables correctly
-export const tablePlugin = ViewPlugin.fromClass(class {
-  decorations: DecorationSet;
-
-  constructor(view: EditorView) {
-    this.decorations = this.createDecorations(view);
+// Widget to render the table DOM structure
+class TableWidget extends WidgetType {
+  constructor(readonly tableText: string) {
+    super();
   }
 
-  update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged) {
-      this.decorations = this.createDecorations(update.view);
-    }
+  eq(other: TableWidget) {
+    return other.tableText === this.tableText;
   }
 
-  createDecorations(view: EditorView) {
-    const decorations: Range<Decoration>[] = [];
-    const { state } = view;
+  toDOM() {
+    const container = document.createElement("div");
+    container.className = "cm-table-container";
 
-    // Track tables in progress
-    let tableStartLine = -1;
-    let tableEndLine = -1;
-    let headerSeparatorLine = -1;
-    let alignments: ('left' | 'center' | 'right')[] = [];
+    const table = document.createElement("table");
+    table.className = "cm-table";
+    container.appendChild(table);
 
-    // Process each visible line to find tables
-    for (let i = 1; i <= state.doc.lines; i++) {
-      const line = state.doc.line(i);
-      const text = line.text.trim();
+    const lines = this.tableText.trim().split("\n");
+    let isHeaderRow = true;
+    let alignments: ("left" | "center" | "right")[] = [];
 
-      // Check if line is a table row (starts and ends with |)
-      if (text.startsWith('|') && text.endsWith('|')) {
-        // Start of a new table
-        if (tableStartLine === -1) {
-          tableStartLine = i;
-        }
-        
-        // Check if this line is the separator row (contains only |, -, :)
-        const isSeparator = /^\|[\s\-:\|]+\|$/.test(text);
-        if (isSeparator && headerSeparatorLine === -1) {
-          headerSeparatorLine = i;
-          
-          // Extract alignment information from separator
-          const cells = text.split('|').filter(Boolean).map(cell => cell.trim());
-          alignments = cells.map(cell => {
-            if (cell.startsWith(':') && cell.endsWith(':')) return 'center';
-            if (cell.endsWith(':')) return 'right';
-            return 'left';
-          });
-        }
-        
-        tableEndLine = i;
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine.startsWith("|") || !trimmedLine.endsWith("|")) continue;
+
+      const cells = trimmedLine
+        .split("|")
+        .filter(
+          (cell, index, arr) =>
+            // Filter out empty strings from split, but keep first/last if they are not empty
+            cell !== "" || index === 0 || index === arr.length - 1,
+        )
+        .map((cell) => cell.trim());
+
+      if (cells.length === 0) continue;
+
+      // Check if this is the separator line
+      const isSeparator = cells.every((cell) => /^[\s\-:]*$/.test(cell));
+
+      if (isSeparator) {
+        isHeaderRow = false; // The next row will be data
+        // Parse alignments from the separator line
+        alignments = cells.map((cell) => {
+          if (cell.startsWith(":") && cell.endsWith(":")) return "center";
+          if (cell.endsWith(":")) return "right";
+          return "left";
+        });
+        continue; // Skip rendering the separator line
       }
-      // Line is not part of the table, process the previously found table
-      else if (tableStartLine !== -1) {
-        this.processTable(decorations, state, tableStartLine, tableEndLine, headerSeparatorLine, alignments);
-        
-        // Reset table tracking
-        tableStartLine = -1;
-        tableEndLine = -1;
-        headerSeparatorLine = -1;
-        alignments = [];
-      }
-    }
-    
-    // Process the last table if there is one
-    if (tableStartLine !== -1) {
-      this.processTable(decorations, state, tableStartLine, tableEndLine, headerSeparatorLine, alignments);
-    }
 
-    return Decoration.set(decorations);
-  }
+      const rowElement = document.createElement("tr");
+      rowElement.className = "cm-table-row";
+      table.appendChild(rowElement);
 
-  processTable(
-    decorations: Range<Decoration>[], 
-    state: EditorView['state'], 
-    startLine: number, 
-    endLine: number, 
-    headerLine: number,
-    alignments: ('left' | 'center' | 'right')[]
-  ) {
-    if (startLine > endLine || headerLine <= startLine || headerLine >= endLine) {
-      return; // Invalid table structure
-    }
-
-    const tableStartPos = state.doc.line(startLine).from;
-    const tableEndPos = state.doc.line(endLine).to;
-    
-    // Add a container for the entire table
-    const tableWidget = document.createElement('div');
-    tableWidget.className = 'cm-table-container';
-    
-    // Create actual table element
-    const table = document.createElement('table');
-    table.className = 'cm-table';
-    tableWidget.appendChild(table);
-    
-    decorations.push(Decoration.widget({
-      widget: {
-        toDOM: () => tableWidget,
-        eq: () => false,
-        ignoreEvent: () => false,
-        updateDOM: () => false,
-        estimatedHeight: 0,
-        lineBreaks: 0,
-        coordsAt: () => null,
-        destroy: () => {}
-      },
-      side: -1
-    }).range(tableStartPos));
-    
-    // Add a span to wrap all the table content
-    decorations.push(Decoration.mark({
-      class: "cm-table-wrapper"
-    }).range(tableStartPos, tableEndPos));
-    
-    // Process each row of the table
-    for (let i = startLine; i <= endLine; i++) {
-      if (i === headerLine) continue; // Skip the separator line
-      
-      const line = state.doc.line(i);
-      const text = line.text.trim();
-      
-      // Parse the table row
-      const cells = text.split('|').filter((cell, index) => 
-        // Skip first and last empty cells if they exist
-        !(index === 0 && cell.trim() === '') && 
-        !(index === text.split('|').length - 1 && cell.trim() === '')
-      );
-      
-      const isHeader = i < headerLine;
-      
-      // Style each row
-      decorations.push(Decoration.mark({
-        class: "cm-table-row"
-      }).range(line.from, line.to));
-      
-      // Apply cell styling
-      let currentPos = line.text.indexOf('|') + 1 + line.from;
-      
-      for (let cellIndex = 0; cellIndex < cells.length; cellIndex++) {
-        const cell = cells[cellIndex].trim();
-        
-        // Find the cell boundaries
-        const cellEnd = line.text.indexOf('|', currentPos - line.from);
-        if (cellEnd === -1) break;
-        
-        const cellStart = currentPos;
-        const cellEndPos = line.from + cellEnd;
-        
-        // Get alignment for this cell
-        const alignment = alignments[cellIndex] || 'left';
-        const alignClass = alignment === 'center' ? '-center' : alignment === 'right' ? '-right' : '';
-        
-        // Apply cell styling based on whether it's a header or regular cell
-        const cellClass = isHeader 
-          ? `cm-table-header${alignClass}` 
+      cells.forEach((cellText, cellIndex) => {
+        const cellElement = document.createElement(isHeaderRow ? "th" : "td");
+        const alignClass =
+          alignments[cellIndex] === "center"
+            ? "-center"
+            : alignments[cellIndex] === "right"
+              ? "-right"
+              : "";
+        cellElement.className = isHeaderRow
+          ? `cm-table-header${alignClass}`
           : `cm-table-cell${alignClass}`;
-          
-        decorations.push(Decoration.mark({
-          class: cellClass
-        }).range(cellStart, cellEndPos));
-        
-        currentPos = cellEndPos + 1;
+        cellElement.textContent = cellText;
+        rowElement.appendChild(cellElement);
+      });
+    }
+
+    return container;
+  }
+
+  ignoreEvent() {
+    return false;
+  }
+}
+
+// Plugin to hide markdown table syntax and replace with rendered table
+export const tablePlugin = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+
+    constructor(view: EditorView) {
+      this.decorations = this.createDecorations(view);
+    }
+
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged) {
+        this.decorations = this.createDecorations(update.view);
       }
     }
-    
-    // Replace the entire table with our styled version
-    decorations.push(Decoration.replace({}).range(tableStartPos, tableEndPos));
-  }
-}, {
-  decorations: v => v.decorations
-});
+
+    createDecorations(view: EditorView) {
+      const decorations: Range<Decoration>[] = [];
+      const { state } = view;
+
+      syntaxTree(state).iterate({
+        enter: (node) => {
+          const type = node.type;
+          if (type.name === "Table") {
+            const tableText = state.doc.sliceString(node.from, node.to);
+
+            // Replace the entire table range with a widget
+            decorations.push(
+              Decoration.replace({
+                widget: new TableWidget(tableText), // Use the new TableWidget
+                inclusive: true,
+              }).range(node.from, node.to),
+            );
+          }
+        },
+      });
+
+      // Sort decorations by from position and startSide
+      decorations.sort((a, b) => {
+        if (a.from !== b.from) return a.from - b.from;
+        return a.value.startSide - b.value.startSide;
+      });
+
+      return Decoration.set(decorations);
+    }
+  },
+  {
+    decorations: (v) => v.decorations,
+  },
+);

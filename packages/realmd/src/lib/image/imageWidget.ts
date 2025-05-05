@@ -2,20 +2,24 @@ import { WidgetType, EditorView } from "@codemirror/view";
 
 interface ImageWidgetParams {
   url: string;
+  alt: string; // Add alt text parameter
   view: EditorView;
 }
 
 export class ImageWidget extends WidgetType {
-  readonly url;
+  readonly url: string;
+  readonly alt: string; // Add alt property
 
-  constructor({ url }: ImageWidgetParams) {
+  constructor({ url, alt }: ImageWidgetParams) {
+    // Destructure alt
     super();
 
     this.url = url;
+    this.alt = alt; // Assign alt
   }
 
   eq(imageWidget: ImageWidget) {
-    return imageWidget.url === this.url;
+    return imageWidget.url === this.url && imageWidget.alt === this.alt; // Compare alt too
   }
 
   toDOM() {
@@ -28,6 +32,7 @@ export class ImageWidget extends WidgetType {
     figure.className = "cm-image-figure";
     image.className = "cm-image-img";
     image.src = this.url;
+    image.alt = this.alt; // Set alt attribute
 
     image.onerror = () => {
       // Handle image loading errors

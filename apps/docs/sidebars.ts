@@ -22,6 +22,7 @@ const sidebars: SidebarsConfig = {
       label: "Realmd",
       items: [
         "realmd/getting-started",
+        "realmd/checkbox-plugin", // Add checkbox plugin documentation link
         // Add other Realmd related documentation pages here
       ],
     },
