@@ -13,13 +13,13 @@ export const markdownStyles = HighlightStyle.define([
   
   // Lists (other than bullet)
   { tag: tags.list, margin: "8px 0" },
-  { tag: tags.labelName, color: "#e6db74" }, // For definition lists
+  { tag: tags.labelName, color: "var(--ifm-font-color-secondary)" }, // For definition lists
   
   // Horizontal rule
   { tag: tags.processingInstruction, display: "block", borderBottom: "1px solid #555", margin: "12px 0" },
   
   // Inline code
-  { tag: tags.monospace, fontFamily: "monospace", backgroundColor: "rgba(0, 0, 0, 0.3)", padding: "2px 4px", borderRadius: "3px" },
+  { tag: tags.monospace, fontFamily: "monospace", backgroundColor: "var(--ifm-code-background)", padding: "2px 4px", borderRadius: "3px" },
 ]);
 
 // Theme for additional markdown elements
@@ -37,7 +37,7 @@ export const markdownTheme = EditorView.baseTheme({
   
   // Task list styling (for items not covered by checkbox plugin)
   ".cm-meta.cm-list": {
-    color: "#75715e"
+    color: "var(--ifm-font-color-secondary)"
   },
   
   // Text formatting styles
